@@ -1,18 +1,35 @@
 package com.alkateca.picpaysimplicado.models;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 
 @AllArgsConstructor
 @NoArgsConstructor
-public class Lojista {
+@Entity
+public class User {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
     private String nome;
-    private Long cnpj;
+    private Long documento;
     private String email;
     private String senha;
     private Double saldo;
+    private TipoConta tipoConta;
 
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     public String getNome() {
         return nome;
@@ -23,11 +40,11 @@ public class Lojista {
     }
 
     public Long getCnpj() {
-        return cnpj;
+        return documento;
     }
 
     public void setCnpj(Long cnpj) {
-        this.cnpj = cnpj;
+        this.documento = documento;
     }
 
     public String getEmail() {
@@ -52,5 +69,17 @@ public class Lojista {
 
     public void depositar(Double valor){
         this.saldo += valor;
+    }
+
+    public void sacar(Double valor){
+        this.saldo -= valor;
+    }
+
+    public TipoConta getTipoConta() {
+        return tipoConta;
+    }
+
+    public void setTipoConta(TipoConta tipoConta) {
+        this.tipoConta = tipoConta;
     }
 }
