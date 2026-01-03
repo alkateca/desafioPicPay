@@ -4,6 +4,9 @@ import com.alkateca.picpaysimplicado.dto.TransferDTO;
 import com.alkateca.picpaysimplicado.models.TipoConta;
 import com.alkateca.picpaysimplicado.models.User;
 import com.alkateca.picpaysimplicado.repository.UserRepository;
+import com.alkateca.picpaysimplicado.service.TransferService;
+import com.alkateca.picpaysimplicado.service.UserService;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,12 +19,17 @@ import java.util.Optional;
 public class PagamentoController {
 
     @Autowired
-    UserRepository userRepository;
+    UserService userService;
+
+    @Autowired
+    TransferService transferService;
+
+
 
     @PostMapping("/user")
-    public ResponseEntity<User> newUser(@RequestBody User user) {
+    public ResponseEntity<User> save(@RequestBody User user) {
 
-        userRepository.save(user);
+        userService.save(user);
 
         return ResponseEntity.ok(user);
     }
@@ -29,39 +37,26 @@ public class PagamentoController {
     @GetMapping("/user")
     public ResponseEntity<List<User>> getUsers() {
 
-        List<User> users = userRepository.findAll();
+        List<User> users = userService.findAll();
 
         return ResponseEntity.ok(users);
     }
 
     @GetMapping("/user/{id}")
     public ResponseEntity<User> getUser(@PathVariable Long id) {
-        Optional<User> user = userRepository.findById(id);
-        return user.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+        User user = userService.findById(id);
+        return ResponseEntity.ok(user);
     }
 
     @PostMapping("/transfer")
-    public ResponseEntity<String> transferencia(@RequestBody TransferDTO data){
+    @Transactional
+    public ResponseEntity<String> transferencia(@RequestBody TransferDTO data) throws Exception {
 
+        if(transferService.transfer(data) == true ){
+            return ResponseEntity.ok("Transferência realizada");
+        };
 
-        User payer = userRepository.findById(data.payer()).orElseThrow(() -> new RuntimeException("Pagador não encontrado"));
-        User payee = userRepository.findById(data.payee()).orElseThrow(() -> new RuntimeException("Recebedor não encontrado"));
-
-
-        if(payer.getTipoConta() == TipoConta.LOJISTA){
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Tipo de conta inválido para essa transação");
-        }
-        if(payer.getSaldo() < data.value()){
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Saldo insuficiente");
-        }
-
-        payer.sacar(data.value());
-        payee.depositar(data.value());
-
-        userRepository.save(payer);
-        userRepository.save(payee);
-
-        return ResponseEntity.ok("Transferência realizada");
+        return ResponseEntity.badRequest().build();
 
     }
 
